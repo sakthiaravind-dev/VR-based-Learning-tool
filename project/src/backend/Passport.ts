@@ -9,6 +9,10 @@ dotenv.config();
 
 const router = Router();
 
+const BASE_URL = process.env.NODE_ENV == 'prod'
+  ? 'https://vr-based-learning-tool.onrender.com'
+  : 'http://localhost:5000';
+
 interface GoogleLoginUser {
   id: string;
   token: string;
@@ -19,7 +23,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-      callbackURL: 'http://localhost:5000/api/auth/google/callback',
+      callbackURL: 'https://vr-based-learning-tool.onrender.com/api/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       console.log('Google Profile:', profile);
@@ -100,7 +104,7 @@ router.get(
     });
 
     console.log('Google authentication successful, redirecting...');
-    res.redirect('http://localhost:5173/selectionpage');
+   res.redirect(`https://vr-based-learning-tool.onrender.com/selectionpage`);
   }
 );
 

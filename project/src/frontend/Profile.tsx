@@ -47,7 +47,7 @@ const ProfilePage: React.FC = () => {
   
     try {
       const response = await axios.post<{ message: string }>(
-        "http://localhost:5000/api/profile",
+        "https://vr-based-learning-tool.onrender.com/api/profile",
         formData,
         {
           headers: {
@@ -56,6 +56,12 @@ const ProfilePage: React.FC = () => {
           withCredentials: true,
         }
       );
+      
+      if (formData.disorder === "ASD") {
+        navigate("/asdpage");
+      } else if (formData.disorder === "ID") {
+        navigate("/idpage");
+      }
   
       console.log("Profile Submitted:", response.data.message);
     } catch (error) {
