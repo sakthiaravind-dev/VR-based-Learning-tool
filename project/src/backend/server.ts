@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -14,6 +14,7 @@ import passportRoute from './Passport';
 import meRoute from './auth';
 import profileRoute from './Profile';
 import scoreRoutes from './scores';
+import coloringProgress from './coloringProgress';
 import { trackUserSession } from './middleware/trackUserSession';
 
 const app = express();
@@ -40,10 +41,11 @@ mongoose.connect(MONGODB_URI as string)
 app.use(cors({
   origin: [
     process.env.CLIENT_URL || 'http://localhost:5173',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'https://vr-based-learning-tool.onrender.com'
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   credentials: true,
 }));
 
@@ -60,7 +62,8 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 1 day
-    sameSite: 'strict'
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
   }
 }));
 
@@ -74,6 +77,10 @@ app.use(trackUserSession);
 app.use(cookieParser());
 app.use(bodyParser.json());
 
+// Serve static files
+const frontendPath = path.join(__dirname, 'client');
+app.use(express.static(frontendPath));
+
 // API Routes
 app.use('/api', signupRoute);
 app.use('/api', loginRoute);
@@ -81,12 +88,10 @@ app.use('/api', passportRoute);
 app.use('/api', meRoute);
 app.use('/api', profileRoute);
 app.use('/api', scoreRoutes);
+app.use('/api', coloringProgress);
 
-// Serve the frontend
-const frontendPath = path.join(__dirname, 'client');
-app.use(express.static(frontendPath));
-
-app.get('*', (req, res) => {
+// Handle client-side routing - must be after API routes
+app.get('/*', (_req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
